@@ -91,7 +91,9 @@ export default function BankPage() {
             setLoading(false);
         });
     }
-  }, [isPayPalReady, user, toast]); // Removed 'amount' from dependencies
+  // DO NOT add 'amount' to the dependency array. It causes re-renders and breaks PayPal.
+  // The 'amount' is read directly inside createOrder.
+  }, [isPayPalReady, user, toast]); 
 
 
   const setPresetAmount = (preset: number) => {
@@ -138,7 +140,7 @@ export default function BankPage() {
                   <Button type="button" variant="outline" onClick={() => setPresetAmount(200)} disabled={loading}>$200</Button>
                   <Button type="button" variant="outline" onClick={() => setPresetAmount(500)} disabled={loading}>$500</Button>
                 </div>
-                {loading && (
+                {loading && !isPayPalReady && (
                     <div className="flex justify-center items-center">
                         <Loader2 className="mr-2 h-6 w-6 animate-spin" />
                         <span>Loading PayPal...</span>
