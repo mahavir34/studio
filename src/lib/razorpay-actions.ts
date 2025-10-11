@@ -1,0 +1,93 @@
+'use server';
+
+import Razorpay from 'razorpay';
+import { z } from 'zod';
+import crypto from 'crypto';
+
+const amountSchema = z.string().transform(v => parseFloat(v)).pipe(z.number().positive());
+const userIdSchema = z.string().min(1);
+
+export async function createRazorpayOrder(
+  prevState: { orderId: string | null; error: string | null },
+  formData: FormData
+) {
+  const amountResult = amountSchema.safeParse(formData.get('amount'));
+  const userIdResult = userIdSchema.safeParse(formData.get('userId'));
+  
+  if (!amountResult.success || !userIdResult.success) {
+    return { orderId: null, error: 'Invalid amount or user ID.' };
+  }
+
+  const amount = amountResult.data;
+  
+  if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      console.error("Razorpay keys are not set in .env file");
+      return { orderId: null, error: 'Payment service is not configured.' };
+  }
+
+  const razorpay = new Razorpay({
+    key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+  });
+
+  const options = {
+    amount: amount * 100, // amount in the smallest currency unit
+    currency: 'INR',
+    receipt: `receipt_user_${userIdResult.data}_${Date.now()}`,
+  };
+
+  try {
+    const order = await razorpay.orders.create(options);
+    if (!order) {
+      return { orderId: null, error: 'Could not create payment order.' };
+    }
+    return { orderId: order.id, error: null };
+  } catch (error) {
+    console.error('Razorpay order creation failed:', error);
+    return { orderId: null, error: 'Could not create payment order. An unknown error occurred.' };
+  }
+}
+
+
+const verificationSchema = z.object({
+    razorpay_order_id: z.string(),
+    razorpay_payment_id: z.string(),
+    razorpay_signature: z.string(),
+});
+
+export async function verifyPayment(formData: FormData) {
+    const result = verificationSchema.safeParse({
+        razorpay_order_id: formData.get('razorpay_order_id'),
+        razorpay_payment_id: formData.get('razorpay_payment_id'),
+        razorpay_signature: formData.get('razorpay_signature'),
+    });
+
+    if (!result.success) {
+        return { success: false, error: 'Invalid verification data.' };
+    }
+
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = result.data;
+    const key_secret = process.env.RAZORPAY_KEY_SECRET;
+    
+    if (!key_secret) {
+        console.error('Razorpay key secret is not set.');
+        return { success: false, error: 'Server configuration error.' };
+    }
+
+    try {
+        const hmac = crypto.createHmac('sha256', key_secret);
+        hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
+        const generated_signature = hmac.digest('hex');
+
+        if (generated_signature === razorpay_signature) {
+            // Payment is successful
+            // Here you can save the payment details to your database
+            return { success: true };
+        } else {
+            return { success: false, error: 'Signature mismatch.' };
+        }
+    } catch (error) {
+        console.error('Payment verification failed:', error);
+        return { success: false, error: 'An error occurred during verification.' };
+    }
+}

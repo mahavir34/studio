@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useActionState, useEffect } from 'react';
 import { useUser } from '@/firebase';
 import {
   Card,
@@ -19,13 +19,30 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { createRazorpayOrder, verifyPayment } from '@/lib/razorpay-actions';
+
+declare global {
+    interface Window {
+        Razorpay: any;
+    }
+}
+
+type OrderState = {
+  orderId: string | null;
+  error: string | null;
+}
+
+const initialState: OrderState = {
+  orderId: null,
+  error: null,
+};
 
 export default function BankPage() {
   const { user } = useUser();
   const [amount, setAmount] = useState('1000');
-  const [loading, setLoading] = useState(false);
+  const [orderState, createOrderAction] = useActionState(createRazorpayOrder, initialState);
   const { toast } = useToast();
-
+  
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setAmount(value);
@@ -34,7 +51,7 @@ export default function BankPage() {
   const setPresetAmount = (preset: number) => {
     setAmount(String(preset));
   };
-  
+
   const handleRecharge = () => {
     if (!user) {
         toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to recharge.' });
@@ -45,19 +62,74 @@ export default function BankPage() {
         toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Please enter a valid amount.' });
         return;
     }
-    setLoading(true);
-    // Placeholder for actual payment gateway integration
-    toast({ title: 'Processing Recharge...', description: `Requesting to add ₹${numAmount}` });
-    
-    // Simulate API call
-    setTimeout(() => {
-        // In a real app, you would get a response from the payment gateway
-        // and then update the user's balance in Firestore.
-        toast({ title: 'Recharge Successful!', description: `₹${numAmount} has been added to your account.`});
-        setLoading(false);
-    }, 2000);
+
+    const formData = new FormData();
+    formData.append('amount', amount);
+    formData.append('userId', user.uid);
+    createOrderAction(formData);
   };
 
+  const handleRazorpayPayment = async (orderId: string) => {
+    const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: parseFloat(amount) * 100, // amount in the smallest currency unit
+        currency: "INR",
+        name: "AI Cash Gaming",
+        description: "Recharge Transaction",
+        order_id: orderId,
+        handler: async function (response: any) {
+            const verificationData = new FormData();
+            verificationData.append('razorpay_order_id', response.razorpay_order_id);
+            verificationData.append('razorpay_payment_id', response.razorpay_payment_id);
+            verificationData.append('razorpay_signature', response.razorpay_signature);
+            
+            const verificationResult = await verifyPayment(verificationData);
+
+            if (verificationResult.success) {
+                toast({
+                    title: 'Payment Successful',
+                    description: `₹${amount} has been added to your account.`,
+                });
+                // Here you would typically update the user's balance in Firestore
+            } else {
+                toast({
+                    variant: 'destructive',
+                    title: 'Payment Verification Failed',
+                    description: verificationResult.error || 'An unknown error occurred.',
+                });
+            }
+        },
+        prefill: {
+            name: user?.displayName || "User",
+            email: user?.email || "",
+        },
+        theme: {
+            color: "#3399cc"
+        }
+    };
+    const rzp1 = new window.Razorpay(options);
+    rzp1.on('payment.failed', function (response: any) {
+        toast({
+            variant: 'destructive',
+            title: 'Payment Failed',
+            description: response.error.description,
+        });
+    });
+    rzp1.open();
+  }
+
+  useEffect(() => {
+    if (orderState.orderId) {
+      handleRazorpayPayment(orderState.orderId);
+    }
+    if (orderState.error) {
+      toast({
+        variant: 'destructive',
+        title: 'Payment Error',
+        description: orderState.error,
+      });
+    }
+  }, [orderState]);
 
   return (
     <div className="w-full">
@@ -99,13 +171,12 @@ export default function BankPage() {
                   <Button type="button" variant="outline" onClick={() => setPresetAmount(25000)}>₹25000</Button>
                 </div>
                 
-                <Button onClick={handleRecharge} disabled={loading} className="w-full">
-                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                <Button onClick={handleRecharge} className="w-full">
                   Proceed to Pay ₹{amount}
                 </Button>
 
                 <p className="text-xs text-muted-foreground text-center">
-                  You will be redirected to your payment app (PhonePe, GPay, etc.) to complete the payment.
+                  You will be redirected to your payment app to complete the payment.
                 </p>
               </CardContent>
             </Card>
