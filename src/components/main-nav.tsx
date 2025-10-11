@@ -7,9 +7,8 @@ import { Home, CircleDollarSign, Gift, User, Trophy, Users } from "lucide-react"
 
 const links = [
   { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/invest", label: "Invest", icon: CircleDollarSign },
-  { href: "/rewards", label: "Rewards", icon: Gift },
-  { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
+  { href: "/referrals", label: "Referrals", icon: Users },
+  { href: "/tasks", label: "Tasks", icon: Trophy },
   { href: "/profile", label: "Profile", icon: User },
 ]
 
@@ -17,6 +16,7 @@ const desktopLinks = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/referrals", label: "Referrals", icon: Users },
   { href: "/tasks", label: "Tasks", icon: Trophy },
+  { href: "/profile", label: "Profile", icon: User },
 ]
 
 
@@ -26,19 +26,19 @@ export function MainNav() {
   return (
     <>
     {/* Mobile Nav */}
-    <div className="md:hidden flex justify-around items-center p-2">
+    <nav className="md:hidden flex justify-around items-center p-2 border-t bg-background">
       {links.map((link) => (
         <Link href={link.href} key={link.href} className={cn(
-          "flex flex-col items-center gap-1 p-2 rounded-lg transition-colors",
+          "flex flex-col items-center gap-1 p-2 rounded-lg transition-colors w-1/4",
           pathname === link.href ? "text-primary" : "text-muted-foreground hover:text-primary"
         )}>
             <link.icon className="h-6 w-6" />
             <span className="text-xs font-medium">{link.label}</span>
         </Link>
       ))}
-    </div>
+    </nav>
     {/* Desktop Nav */}
-    <div className="hidden md:flex flex-col gap-2 p-4">
+    <nav className="hidden md:flex flex-col gap-2 p-4">
       {desktopLinks.map((link) => (
          <Link href={link.href} key={link.href} className={cn(
           "flex items-center gap-3 px-4 py-2 rounded-lg transition-colors text-lg",
@@ -48,7 +48,7 @@ export function MainNav() {
             <span>{link.label}</span>
         </Link>
       ))}
-    </div>
+    </nav>
     </>
   )
 }
