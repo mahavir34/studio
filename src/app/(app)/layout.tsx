@@ -13,6 +13,7 @@ import {
   Settings,
   Wallet,
   Globe,
+  Landmark,
 } from 'lucide-react';
 import { MainNav } from '@/components/main-nav';
 import { Chatbot } from '@/components/chatbot';
@@ -32,6 +33,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="font-semibold text-lg">
              {userBalance.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
           </div>
+          <Button variant="outline" size="sm">
+            Bank
+            <Landmark className="ml-2 h-4 w-4" />
+          </Button>
           <Button variant="outline" size="sm">
             English
             <Globe className="ml-2 h-4 w-4" />
