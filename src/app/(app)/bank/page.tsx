@@ -39,6 +39,11 @@ export default function BankPage() {
 
   useEffect(() => {
     if (window.paypal && paypalButtonContainer.current && user) {
+        // To avoid re-rendering the button unnecessarily, clear the container first
+        if (paypalButtonContainer.current) {
+            paypalButtonContainer.current.innerHTML = '';
+        }
+
         setLoading(true);
         window.paypal.Buttons({
             createOrder: async (data: any, actions: any) => {
@@ -75,6 +80,9 @@ export default function BankPage() {
                 setLoading(false);
             }
         }).render(paypalButtonContainer.current).then(() => {
+            setLoading(false);
+        }).catch((err: any) => {
+            console.error("Failed to render PayPal buttons", err);
             setLoading(false);
         });
     }
@@ -131,7 +139,7 @@ export default function BankPage() {
                         <span>Loading PayPal...</span>
                     </div>
                 )}
-                <div ref={paypalButtonContainer} className="w-full min-h-[50px]"></div>
+                <div ref={paypalButtonContainer} className="w-full min-h-[50px] relative z-0"></div>
                 <p className="text-xs text-muted-foreground text-center">
                   You will be redirected to PayPal to complete your payment.
                 </p>

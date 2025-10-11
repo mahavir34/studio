@@ -31,7 +31,6 @@ export default function DashboardPage() {
                 <p className="text-sm text-muted-foreground">My Balance</p>
                 <p className="text-2xl font-bold">{userBalance.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</p>
               </div>
-               <Image src="https://storage.googleapis.com/project-spark-341015.appspot.com/a58f4a76-1b8e-4a87-a3d2-4e9638c11e73" alt="Mascot" width={64} height={64} className="w-16 h-16" />
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <Button asChild size="lg" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
