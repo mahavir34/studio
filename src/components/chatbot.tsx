@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
-import { useFormState, useFormStatus } from "react-dom"
+import { useState, useRef, useEffect, useActionState } from "react"
+import { useFormStatus } from "react-dom"
 import {
   Sheet,
   SheetContent,
@@ -45,7 +45,7 @@ export function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([
     { type: "bot", text: initialState.botMessage },
   ])
-  const [formState, formAction] = useFormState(getChatbotResponse, initialState)
+  const [formState, formAction] = useActionState(getChatbotResponse, initialState)
   const formRef = useRef<HTMLFormElement>(null)
   const viewportRef = useRef<HTMLDivElement>(null)
 
