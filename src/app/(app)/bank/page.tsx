@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createRazorpayOrder, verifyPayment } from '@/lib/razorpay-actions';
+import { useFormStatus } from 'react-dom';
 
 declare global {
     interface Window {
@@ -32,15 +33,36 @@ type OrderState = {
   error: string | null;
 }
 
-const initialState: OrderState = {
+type VerificationState = {
+    success: boolean;
+    error: string | null;
+}
+
+const initialOrderState: OrderState = {
   orderId: null,
   error: null,
 };
 
+const initialVerificationState: VerificationState = {
+    success: false,
+    error: null,
+}
+
+function SubmitButton({ amount }: { amount: string }) {
+    const { pending } = useFormStatus();
+    return (
+        <Button type="submit" disabled={pending} className="w-full">
+            {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Proceed to Pay ₹{amount}
+        </Button>
+    )
+}
+
 export default function BankPage() {
   const { user } = useUser();
   const [amount, setAmount] = useState('1000');
-  const [orderState, createOrderAction] = useActionState(createRazorpayOrder, initialState);
+  const [orderState, createOrderAction] = useActionState(createRazorpayOrder, initialOrderState);
+  const [verificationState, verifyPaymentAction] = useActionState(verifyPayment, initialVerificationState);
   const { toast } = useToast();
   
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,52 +74,28 @@ export default function BankPage() {
     setAmount(String(preset));
   };
 
-  const handleRecharge = () => {
-    if (!user) {
-        toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to recharge.' });
-        return;
+  const handleRazorpayPayment = (orderId: string) => {
+    if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
+      toast({
+        variant: 'destructive',
+        title: 'Configuration Error',
+        description: 'Razorpay Key ID is not set.',
+      });
+      return;
     }
-    const numAmount = parseFloat(amount);
-    if (isNaN(numAmount) || numAmount <= 0) {
-        toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Please enter a valid amount.' });
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append('amount', amount);
-    formData.append('userId', user.uid);
-    createOrderAction(formData);
-  };
-
-  const handleRazorpayPayment = async (orderId: string) => {
     const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: parseFloat(amount) * 100, // amount in the smallest currency unit
+        amount: parseFloat(amount) * 100,
         currency: "INR",
         name: "AI Cash Gaming",
         description: "Recharge Transaction",
         order_id: orderId,
-        handler: async function (response: any) {
+        handler: function (response: any) {
             const verificationData = new FormData();
             verificationData.append('razorpay_order_id', response.razorpay_order_id);
             verificationData.append('razorpay_payment_id', response.razorpay_payment_id);
             verificationData.append('razorpay_signature', response.razorpay_signature);
-            
-            const verificationResult = await verifyPayment(verificationData);
-
-            if (verificationResult.success) {
-                toast({
-                    title: 'Payment Successful',
-                    description: `₹${amount} has been added to your account.`,
-                });
-                // Here you would typically update the user's balance in Firestore
-            } else {
-                toast({
-                    variant: 'destructive',
-                    title: 'Payment Verification Failed',
-                    description: verificationResult.error || 'An unknown error occurred.',
-                });
-            }
+            verifyPaymentAction(verificationData);
         },
         prefill: {
             name: user?.displayName || "User",
@@ -131,6 +129,24 @@ export default function BankPage() {
     }
   }, [orderState]);
 
+  useEffect(() => {
+    if (verificationState.success) {
+        toast({
+            title: 'Payment Successful',
+            description: `₹${amount} has been added to your account.`,
+        });
+        // Here you would typically update the user's balance in Firestore
+    }
+    if(verificationState.error) {
+        toast({
+            variant: 'destructive',
+            title: 'Payment Verification Failed',
+            description: verificationState.error,
+        });
+    }
+  }, [verificationState]);
+
+
   return (
     <div className="w-full">
       <Tabs defaultValue="recharge" className="w-full">
@@ -151,31 +167,31 @@ export default function BankPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="recharge-amount">Amount (INR)</Label>
-                  <Input
-                    id="recharge-amount"
-                    name="amount"
-                    type="number"
-                    placeholder="Enter amount in INR"
-                    value={amount}
-                    onChange={handleAmountChange}
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <Button type="button" variant="outline" onClick={() => setPresetAmount(500)}>₹500</Button>
-                  <Button type="button" variant="outline" onClick={() => setPresetAmount(1000)}>₹1000</Button>
-                  <Button type="button" variant="outline" onClick={() => setPresetAmount(2000)}>₹2000</Button>
-                  <Button type="button" variant="outline" onClick={() => setPresetAmount(5000)}>₹5000</Button>
-                  <Button type="button" variant="outline" onClick={() => setPresetAmount(10000)}>₹10000</Button>
-                  <Button type="button" variant="outline" onClick={() => setPresetAmount(25000)}>₹25000</Button>
-                </div>
-                
-                <Button onClick={handleRecharge} className="w-full">
-                  Proceed to Pay ₹{amount}
-                </Button>
-
-                <p className="text-xs text-muted-foreground text-center">
+                <form action={createOrderAction}>
+                    <div className="space-y-2">
+                      <Label htmlFor="recharge-amount">Amount (INR)</Label>
+                      <Input
+                        id="recharge-amount"
+                        name="amount"
+                        type="number"
+                        placeholder="Enter amount in INR"
+                        value={amount}
+                        onChange={handleAmountChange}
+                      />
+                    </div>
+                    {user && <input type="hidden" name="userId" value={user.uid} />}
+                    <div className="grid grid-cols-3 gap-2 my-4">
+                      <Button type="button" variant="outline" onClick={() => setPresetAmount(500)}>₹500</Button>
+                      <Button type="button" variant="outline" onClick={() => setPresetAmount(1000)}>₹1000</Button>
+                      <Button type="button" variant="outline" onClick={() => setPresetAmount(2000)}>₹2000</Button>
+                      <Button type="button" variant="outline" onClick={() => setPresetAmount(5000)}>₹5000</Button>
+                      <Button type="button" variant="outline" onClick={() => setPresetAmount(10000)}>₹10000</Button>
+                      <Button type="button" variant="outline" onClick={() => setPresetAmount(25000)}>₹25000</Button>
+                    </div>
+                    
+                    <SubmitButton amount={amount} />
+                </form>
+                <p className="text-xs text-muted-foreground text-center mt-4">
                   You will be redirected to your payment app to complete the payment.
                 </p>
               </CardContent>

@@ -55,7 +55,12 @@ const verificationSchema = z.object({
     razorpay_signature: z.string(),
 });
 
-export async function verifyPayment(formData: FormData) {
+type VerificationState = {
+    success: boolean;
+    error: string | null;
+}
+
+export async function verifyPayment(prevState: VerificationState, formData: FormData): Promise<VerificationState> {
     const result = verificationSchema.safeParse({
         razorpay_order_id: formData.get('razorpay_order_id'),
         razorpay_payment_id: formData.get('razorpay_payment_id'),
@@ -82,7 +87,7 @@ export async function verifyPayment(formData: FormData) {
         if (generated_signature === razorpay_signature) {
             // Payment is successful
             // Here you can save the payment details to your database
-            return { success: true };
+            return { success: true, error: null };
         } else {
             return { success: false, error: 'Signature mismatch.' };
         }
