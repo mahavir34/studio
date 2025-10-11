@@ -26,14 +26,20 @@ export async function createRazorpayOrder(
 
   const amount = amountResult.data;
   
-  if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-      console.error("Razorpay keys are not set in .env file");
+  const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!keyId || !keySecret) {
+      let errorMessage = "Razorpay keys are not set in .env file. ";
+      if (!keyId) errorMessage += "NEXT_PUBLIC_RAZORPAY_KEY_ID is missing. ";
+      if (!keySecret) errorMessage += "RAZORPAY_KEY_SECRET is missing.";
+      console.error(errorMessage);
       return { orderId: null, amount: null, error: 'Payment service is not configured.' };
   }
 
   const razorpay = new Razorpay({
-    key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
+    key_id: keyId,
+    key_secret: keySecret,
   });
 
   const options = {
