@@ -85,7 +85,7 @@ export function Chatbot() {
         </SheetHeader>
         <div className="flex-1 my-4 pr-4">
             <div className="flex flex-col items-center justify-center h-full text-center">
-                 <img src="https://storage.googleapis.com/project-spark-341015.appspot.com/71401343-4f98-4389-9b98-50478799af35" alt="Chatbot mascot" className="w-48 h-48" />
+                 <img src="https://storage.googleapis.com/project-spark-341015.appspot.com/a89a0364-c119-4530-9750-f89b94236a08" alt="Chatbot mascot" className="w-48 h-48" />
             </div>
         </div>
         <ScrollArea className="flex-1 my-4 pr-4" viewportRef={viewportRef}>
