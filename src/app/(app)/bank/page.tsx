@@ -30,20 +30,6 @@ const initialOrderState = {
   error: undefined,
 };
 
-function SubmitButton() {
-    const [pending, setPending] = useState(false);
-    useEffect(() => {
-        // This is a workaround to sync the form status with our local state
-        // In a real app, you might use a more robust solution or rely on the form's pending state directly if possible
-    }, [pending]);
-    
-    return (
-        <Button type="submit" disabled={pending} className="w-full">
-            {pending ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait...</>) : 'Proceed to Recharge'}
-        </Button>
-    )
-}
-
 
 export default function BankPage() {
   const { user, isUserLoading } = useUser();
@@ -114,6 +100,7 @@ export default function BankPage() {
             }
             setLoading(false);
             formRef.current?.reset();
+            setAmount('');
         },
         prefill: {
             name: user.displayName || "New User",
@@ -129,6 +116,16 @@ export default function BankPage() {
             }
         }
     };
+    
+    if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
+      toast({
+        variant: 'destructive',
+        title: 'Configuration Error',
+        description: 'Razorpay Key ID is not configured. Please contact support.',
+      });
+      setLoading(false);
+      return;
+    }
 
     const rzp = new window.Razorpay(options);
     rzp.open();
