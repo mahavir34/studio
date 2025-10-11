@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useActionState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useUser } from '@/firebase';
 import {
   Card,
@@ -19,123 +19,71 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { createRazorpayOrder, verifyPaymentAndUpdateBalance } from '@/lib/razorpay-actions';
+import { createPayPalOrder, capturePayPalOrder } from '@/lib/paypal-actions';
 
 declare global {
-    interface Window { Razorpay: any; }
+    interface Window { paypal: any; }
 }
 
-const initialOrderState = {
-  orderId: undefined,
-  error: undefined,
-};
-
-
 export default function BankPage() {
-  const { user, isUserLoading } = useUser();
-  const [amount, setAmount] = useState('');
+  const { user } = useUser();
+  const [amount, setAmount] = useState('10.00'); // Default amount for PayPal
   const [loading, setLoading] = useState(false);
-  const [createOrderState, createOrderAction, isCreateOrderPending] = useActionState(createRazorpayOrder, initialOrderState);
+  const paypalButtonContainer = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const formRef = useRef<HTMLFormElement>(null);
 
-  useEffect(() => {
-    if (createOrderState.error) {
-      toast({
-        variant: 'destructive',
-        title: 'Payment Error',
-        description: createOrderState.error,
-      });
-      setLoading(false);
-    }
-    if (createOrderState.orderId) {
-        handleRazorpayPayment(createOrderState.orderId);
-    }
-  }, [createOrderState]);
-
-
-  const handleFormAction = (formData: FormData) => {
-     if (!user) {
-        toast({ variant: 'destructive', title: 'Please log in first.' });
-        return;
-    }
-    const numAmount = Number(amount);
-    if (isNaN(numAmount) || numAmount <= 0) {
-        toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Please enter a valid amount.' });
-        return;
-    }
-    setLoading(true);
-    formData.append('amount', amount);
-    formData.append('userId', user.uid);
-    createOrderAction(formData);
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setAmount(value);
   }
 
-  const handleRazorpayPayment = async (orderId: string) => {
-     if (!user) return;
-
-     const numAmount = Number(amount);
-
-     const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: numAmount * 100,
-        currency: "INR",
-        name: "AI Cash Gaming",
-        description: "Recharge your wallet",
-        image: "https://storage.googleapis.com/project-spark-341015.appspot.com/a58f4a76-1b8e-4a87-a3d2-4e9638c11e73", //Your Logo URL
-        order_id: orderId,
-        handler: async function (response: any) {
-            toast({ title: 'Processing Payment...' });
-            const result = await verifyPaymentAndUpdateBalance({
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-                userId: user.uid,
-                amount: numAmount,
-            });
-
-            if (result.success) {
-                toast({ title: 'Success', description: 'Your balance has been updated.' });
-            } else {
-                toast({ variant: 'destructive', title: 'Verification Failed', description: result.error });
-            }
-            setLoading(false);
-            formRef.current?.reset();
-            setAmount('');
-        },
-        prefill: {
-            name: user.displayName || "New User",
-            email: user.email,
-        },
-        theme: {
-            color: "#3399cc"
-        },
-        modal: {
-            ondismiss: function() {
+  useEffect(() => {
+    if (window.paypal && paypalButtonContainer.current && user) {
+        setLoading(true);
+        window.paypal.Buttons({
+            createOrder: async (data: any, actions: any) => {
+                const numAmount = parseFloat(amount);
+                if (isNaN(numAmount) || numAmount <= 0) {
+                    toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Please enter a valid amount.' });
+                    return;
+                }
+                const order = await createPayPalOrder({ amount: numAmount, userId: user.uid });
+                if (order.id) {
+                    return order.id;
+                } else {
+                    toast({ variant: 'destructive', title: 'Order Error', description: order.error || 'Could not create PayPal order.' });
+                    return;
+                }
+            },
+            onApprove: async (data: any, actions: any) => {
+                setLoading(true);
+                toast({ title: 'Processing Payment...' });
+                const result = await capturePayPalOrder({ orderID: data.orderID, userId: user.uid });
+                if (result.success) {
+                    toast({ title: 'Success', description: 'Your balance has been updated.' });
+                } else {
+                    toast({ variant: 'destructive', title: 'Payment Failed', description: result.error || 'Could not capture payment.' });
+                }
                 setLoading(false);
-                toast({ variant: 'destructive', title: 'Payment cancelled.' });
+            },
+            onError: (err: any) => {
+                toast({ variant: 'destructive', title: 'Payment Error', description: `An error occurred: ${err}` });
+                setLoading(false);
+            },
+            onCancel: () => {
+                toast({ variant: 'destructive', title: 'Payment Cancelled' });
+                setLoading(false);
             }
-        }
-    };
-    
-    if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
-      toast({
-        variant: 'destructive',
-        title: 'Configuration Error',
-        description: 'Razorpay Key ID is not configured. Please contact support.',
-      });
-      setLoading(false);
-      return;
+        }).render(paypalButtonContainer.current).then(() => {
+            setLoading(false);
+        });
     }
+  }, [amount, user, toast]);
 
-    const rzp = new window.Razorpay(options);
-    rzp.open();
-  };
 
   const setPresetAmount = (preset: number) => {
     setAmount(String(preset));
   }
-  
-  const isPending = isCreateOrderPending || loading;
 
   return (
     <div className="w-full">
@@ -149,51 +97,53 @@ export default function BankPage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="recharge">
-            <form ref={formRef} action={handleFormAction}>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recharge Account</CardTitle>
-                  <CardDescription>
-                    Select an amount to add to your balance.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="recharge-amount">Amount</Label>
-                    <Input
-                      id="recharge-amount"
-                      name="amount"
-                      type="number"
-                      placeholder="Enter amount"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      disabled={isPending}
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Button type="button" variant="outline" onClick={() => setPresetAmount(500)} disabled={isPending}>₹500</Button>
-                    <Button type="button" variant="outline" onClick={() => setPresetAmount(1000)} disabled={isPending}>₹1000</Button>
-                    <Button type="button" variant="outline" onClick={() => setPresetAmount(2000)} disabled={isPending}>₹2000</Button>
-                    <Button type="button" variant="outline" onClick={() => setPresetAmount(5000)} disabled={isPending}>₹5000</Button>
-                    <Button type="button" variant="outline" onClick={() => setPresetAmount(10000)} disabled={isPending}>₹10000</Button>
-                    <Button type="button" variant="outline" onClick={() => setPresetAmount(25000)} disabled={isPending}>₹25000</Button>
-                  </div>
-                  <Button type="submit" disabled={isPending} className="w-full">
-                    {isPending ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait...</>) : 'Proceed to Recharge'}
-                  </Button>
-                  <p className="text-xs text-muted-foreground text-center">
-                    You will be redirected to our secure payment partner.
-                  </p>
-                </CardContent>
-              </Card>
-            </form>
+            <Card>
+              <CardHeader>
+                <CardTitle>Recharge Account</CardTitle>
+                <CardDescription>
+                  Select an amount to add to your balance using PayPal.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="recharge-amount">Amount (USD)</Label>
+                  <Input
+                    id="recharge-amount"
+                    name="amount"
+                    type="number"
+                    placeholder="Enter amount in USD"
+                    value={amount}
+                    onChange={handleAmountChange}
+                    disabled={loading}
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button type="button" variant="outline" onClick={() => setPresetAmount(10)} disabled={loading}>$10</Button>
+                  <Button type="button" variant="outline" onClick={() => setPresetAmount(20)} disabled={loading}>$20</Button>
+                  <Button type="button" variant="outline" onClick={() => setPresetAmount(50)} disabled={loading}>$50</Button>
+                  <Button type="button" variant="outline" onClick={() => setPresetAmount(100)} disabled={loading}>$100</Button>
+                  <Button type="button" variant="outline" onClick={() => setPresetAmount(200)} disabled={loading}>$200</Button>
+                  <Button type="button" variant="outline" onClick={() => setPresetAmount(500)} disabled={loading}>$500</Button>
+                </div>
+                {loading && (
+                    <div className="flex justify-center items-center">
+                        <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+                        <span>Loading PayPal...</span>
+                    </div>
+                )}
+                <div ref={paypalButtonContainer} className="w-full min-h-[50px]"></div>
+                <p className="text-xs text-muted-foreground text-center">
+                  You will be redirected to PayPal to complete your payment.
+                </p>
+              </CardContent>
+            </Card>
         </TabsContent>
         <TabsContent value="withdrawal">
             <Card>
                 <CardHeader>
                     <CardTitle>Withdraw Funds</CardTitle>
                     <CardDescription>Transfer your earnings to your bank account.</CardDescription>
-                </CardHeader>
+                </Header>
                 <CardContent className="space-y-4">
                      <div className="space-y-2">
                       <Label htmlFor="withdrawal-amount">Amount</Label>

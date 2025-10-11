@@ -33,7 +33,7 @@ export default function RootLayout({
           {children}
         </FirebaseClientProvider>
         <Toaster />
-        <Script src="https://checkout.razorpay.com/v1/checkout.js" />
+        <Script src={`https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=USD`} />
       </body>
     </html>
   );
