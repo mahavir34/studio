@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useActionState, useEffect } from 'react';
-import { useUser, useFirestore } from '@/firebase';
+import { useState, useActionState, useEffect, useRef } from 'react';
+import { useUser } from '@/firebase';
 import {
   Card,
   CardContent,
@@ -30,12 +30,28 @@ const initialOrderState = {
   error: undefined,
 };
 
+function SubmitButton() {
+    const [pending, setPending] = useState(false);
+    useEffect(() => {
+        // This is a workaround to sync the form status with our local state
+        // In a real app, you might use a more robust solution or rely on the form's pending state directly if possible
+    }, [pending]);
+    
+    return (
+        <Button type="submit" disabled={pending} className="w-full">
+            {pending ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait...</>) : 'Proceed to Recharge'}
+        </Button>
+    )
+}
+
+
 export default function BankPage() {
   const { user, isUserLoading } = useUser();
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const [createOrderState, createOrderAction, isCreateOrderPending] = useActionState(createRazorpayOrder, initialOrderState);
   const { toast } = useToast();
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (createOrderState.error) {
@@ -52,8 +68,8 @@ export default function BankPage() {
   }, [createOrderState]);
 
 
-  const handleRecharge = () => {
-    if (!user) {
+  const handleFormAction = (formData: FormData) => {
+     if (!user) {
         toast({ variant: 'destructive', title: 'Please log in first.' });
         return;
     }
@@ -63,11 +79,10 @@ export default function BankPage() {
         return;
     }
     setLoading(true);
-    const formData = new FormData();
     formData.append('amount', amount);
     formData.append('userId', user.uid);
     createOrderAction(formData);
-  };
+  }
 
   const handleRazorpayPayment = async (orderId: string) => {
      if (!user) return;
@@ -98,6 +113,7 @@ export default function BankPage() {
                 toast({ variant: 'destructive', title: 'Verification Failed', description: result.error });
             }
             setLoading(false);
+            formRef.current?.reset();
         },
         prefill: {
             name: user.displayName || "New User",
@@ -136,41 +152,44 @@ export default function BankPage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="recharge">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recharge Account</CardTitle>
-              <CardDescription>
-                Select an amount to add to your balance.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="recharge-amount">Amount</Label>
-                <Input
-                  id="recharge-amount"
-                  type="number"
-                  placeholder="Enter amount"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  disabled={isPending}
-                />
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <Button variant="outline" onClick={() => setPresetAmount(500)} disabled={isPending}>₹500</Button>
-                <Button variant="outline" onClick={() => setPresetAmount(1000)} disabled={isPending}>₹1000</Button>
-                <Button variant="outline" onClick={() => setPresetAmount(2000)} disabled={isPending}>₹2000</Button>
-                <Button variant="outline" onClick={() => setPresetAmount(5000)} disabled={isPending}>₹5000</Button>
-                <Button variant="outline" onClick={() => setPresetAmount(10000)} disabled={isPending}>₹10000</Button>
-                <Button variant="outline" onClick={() => setPresetAmount(25000)} disabled={isPending}>₹25000</Button>
-              </div>
-              <Button onClick={handleRecharge} disabled={isPending} className="w-full">
-                {isPending ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait...</>) : 'Proceed to Recharge'}
-              </Button>
-              <p className="text-xs text-muted-foreground text-center">
-                You will be redirected to our secure payment partner.
-              </p>
-            </CardContent>
-          </Card>
+            <form ref={formRef} action={handleFormAction}>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recharge Account</CardTitle>
+                  <CardDescription>
+                    Select an amount to add to your balance.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="recharge-amount">Amount</Label>
+                    <Input
+                      id="recharge-amount"
+                      name="amount"
+                      type="number"
+                      placeholder="Enter amount"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      disabled={isPending}
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button type="button" variant="outline" onClick={() => setPresetAmount(500)} disabled={isPending}>₹500</Button>
+                    <Button type="button" variant="outline" onClick={() => setPresetAmount(1000)} disabled={isPending}>₹1000</Button>
+                    <Button type="button" variant="outline" onClick={() => setPresetAmount(2000)} disabled={isPending}>₹2000</Button>
+                    <Button type="button" variant="outline" onClick={() => setPresetAmount(5000)} disabled={isPending}>₹5000</Button>
+                    <Button type="button" variant="outline" onClick={() => setPresetAmount(10000)} disabled={isPending}>₹10000</Button>
+                    <Button type="button" variant="outline" onClick={() => setPresetAmount(25000)} disabled={isPending}>₹25000</Button>
+                  </div>
+                  <Button type="submit" disabled={isPending} className="w-full">
+                    {isPending ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait...</>) : 'Proceed to Recharge'}
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center">
+                    You will be redirected to our secure payment partner.
+                  </p>
+                </CardContent>
+              </Card>
+            </form>
         </TabsContent>
         <TabsContent value="withdrawal">
             <Card>
