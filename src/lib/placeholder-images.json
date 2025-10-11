@@ -1,3 +1,22 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "prod1-img",
+      "description": "Abstract technology background for AI Quantify 1 product",
+      "imageUrl": "https://picsum.photos/seed/ai-cash-1/400/200",
+      "imageHint": "abstract technology"
+    },
+    {
+      "id": "prod2-img",
+      "description": "Data grid visualization for AI Grid Trading product",
+      "imageUrl": "https://picsum.photos/seed/ai-cash-2/400/200",
+      "imageHint": "data grid"
+    },
+    {
+      "id": "prod3-img",
+      "description": "Futuristic city for Future Tech Fund product",
+      "imageUrl": "https://picsum.photos/seed/ai-cash-3/400/200",
+      "imageHint": "futuristic city"
+    }
+  ]
 }
