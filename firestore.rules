@@ -1,0 +1,282 @@
+/**
+  * @file Firebase Security Rules for AI Cash Gaming App
+  * @description This ruleset enforces a strict user-ownership model for user-specific data while allowing public read access to global data collections.
+  *
+  * Data Structure:
+  * - /users/{userId}: Stores user profiles, accessible only by the user themselves.
+  * - /investment_products/{productId}: Stores investment product information, publicly readable.
+  * - /users/{userId}/investments/{investmentId}: Stores user investment data, accessible only by the user.
+  * - /users/{userId}/referral_rewards/{rewardId}: Stores referral reward data, accessible only by the user.
+  * - /achievement_tasks/{taskId}: Stores achievement task information, publicly readable.
+  * - /users/{userId}/achievements/{achievementId}: Stores user achievement data, accessible only by the user.
+  * - /daily_rewards/{rewardId}: Stores daily reward information, publicly readable.
+  * - /users/{userId}/daily_rewards_claimed/{rewardClaimId}: Stores user daily reward claim data, accessible only by the user.
+  * - /users/{userId}/product_purchases/{purchaseId}: Stores product purchase data, accessible only by the user.
+  *
+  * Key Security Decisions:
+  * - User listing is disallowed to protect privacy.
+  * - Global collections (investment_products, achievement_tasks, daily_rewards) are publicly readable.
+  * - All write operations on user-owned data require authentication and ownership validation.
+  *
+  * Authorization Independence:
+  * - Path-based ownership is used to avoid `get()` calls and ensure efficient data retrieval.
+  *
+  * Rules are not Filters:
+  * - Data is segregated based on ownership, ensuring secure list operations.
+  */
+ 
+
+ rules_version = '2';
+ service cloud.firestore {
+  match /databases/{database}/documents {
+ 
+
+   /**
+    * @description Secures user profile information, accessible only by the user.
+    * @path /users/{userId}
+    * @allow (create) - Authenticated user creates their own profile.
+    * @allow (get, list) - Authenticated user reads their own profile.
+    * @allow (update, delete) - Authenticated user updates/deletes their own profile.
+    * @deny (create) - Unauthenticated user attempts to create a profile.
+    * @deny (get, list) - Authenticated user attempts to read another user's profile.
+    * @deny (update, delete) - Authenticated user attempts to update/delete another user's profile.
+    * @principle Enforces document ownership for all operations.
+    */
+   match /users/{userId} {
+    function isSignedIn() {
+     return request.auth != null;
+    }
+ 
+
+    function isOwner(userId) {
+     return isSignedIn() && request.auth.uid == userId;
+    }
+ 
+
+    function isExistingOwner(userId) {
+     return isOwner(userId) && resource != null;
+    }
+ 
+
+    allow get: if isOwner(userId);
+    allow list: if false; // User listing is not allowed for privacy.
+    allow create: if isOwner(userId) && request.resource.data.id == userId;
+    allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id; // Enforce immutability of user ID
+    allow delete: if isExistingOwner(userId);
+   }
+ 
+
+   /**
+    * @description Allows public read access to investment product information.
+    * @path /investment_products/{productId}
+    * @allow (get, list) - Any user can read investment product information.
+    * @deny (create, update, delete) - Only admins can create, update, or delete investment products.
+    * @principle Grants public read access while restricting write access.
+    */
+   match /investment_products/{productId} {
+    allow get, list: if true;
+    allow create, update, delete: if false;
+   }
+ 
+
+   /**
+    * @description Secures user investment information, accessible only by the user.
+    * @path /users/{userId}/investments/{investmentId}
+    * @allow (create) - Authenticated user creates their own investment record.
+    * @allow (get, list) - Authenticated user reads their own investment records.
+    * @allow (update, delete) - Authenticated user updates/deletes their own investment record.
+    * @deny (create) - Unauthenticated user attempts to create an investment record.
+    * @deny (get, list) - Authenticated user attempts to read another user's investment records.
+    * @deny (update, delete) - Authenticated user attempts to update/delete another user's investment records.
+    * @principle Enforces document ownership for all operations.
+    */
+   match /users/{userId}/investments/{investmentId} {
+    function isSignedIn() {
+     return request.auth != null;
+    }
+ 
+
+    function isOwner(userId) {
+     return isSignedIn() && request.auth.uid == userId;
+    }
+ 
+
+    function isExistingOwner(userId) {
+     return isOwner(userId) && resource != null;
+    }
+ 
+
+    allow get: if isOwner(userId);
+    allow list: if isOwner(userId);
+    allow create: if isOwner(userId) && request.resource.data.userId == userId;
+    allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId; //Enforce immutability of userId
+    allow delete: if isExistingOwner(userId);
+   }
+ 
+
+   /**
+    * @description Secures referral reward information, accessible only by the user.
+    * @path /users/{userId}/referral_rewards/{rewardId}
+    * @allow (create) - Authenticated user creates their own referral reward record.
+    * @allow (get, list) - Authenticated user reads their own referral reward records.
+    * @allow (update, delete) - Authenticated user updates/deletes their own referral reward record.
+    * @deny (create) - Unauthenticated user attempts to create a referral reward record.
+    * @deny (get, list) - Authenticated user attempts to read another user's referral reward records.
+    * @deny (update, delete) - Authenticated user attempts to update/delete another user's referral reward records.
+    * @principle Enforces document ownership for all operations.
+    */
+   match /users/{userId}/referral_rewards/{rewardId} {
+    function isSignedIn() {
+     return request.auth != null;
+    }
+ 
+
+    function isOwner(userId) {
+     return isSignedIn() && request.auth.uid == userId;
+    }
+ 
+
+    function isExistingOwner(userId) {
+     return isOwner(userId) && resource != null;
+    }
+ 
+
+    allow get: if isOwner(userId);
+    allow list: if isOwner(userId);
+    allow create: if isOwner(userId) && request.resource.data.referrerId == userId;
+    allow update: if isExistingOwner(userId) && request.resource.data.referrerId == resource.data.referrerId; // Enforce immutability of referrerId
+    allow delete: if isExistingOwner(userId);
+   }
+ 
+
+   /**
+    * @description Allows public read access to achievement task information.
+    * @path /achievement_tasks/{taskId}
+    * @allow (get, list) - Any user can read achievement task information.
+    * @deny (create, update, delete) - Only admins can create, update, or delete achievement tasks.
+    * @principle Grants public read access while restricting write access.
+    */
+   match /achievement_tasks/{taskId} {
+    allow get, list: if true;
+    allow create, update, delete: if false;
+   }
+ 
+
+   /**
+    * @description Secures user achievement progress, accessible only by the user.
+    * @path /users/{userId}/achievements/{achievementId}
+    * @allow (create) - Authenticated user creates their own achievement progress record.
+    * @allow (get, list) - Authenticated user reads their own achievement progress records.
+    * @allow (update, delete) - Authenticated user updates/deletes their own achievement progress record.
+    * @deny (create) - Unauthenticated user attempts to create an achievement progress record.
+    * @deny (get, list) - Authenticated user attempts to read another user's achievement progress records.
+    * @deny (update, delete) - Authenticated user attempts to update/delete another user's achievement progress records.
+    * @principle Enforces document ownership for all operations.
+    */
+   match /users/{userId}/achievements/{achievementId} {
+    function isSignedIn() {
+     return request.auth != null;
+    }
+ 
+
+    function isOwner(userId) {
+     return isSignedIn() && request.auth.uid == userId;
+    }
+ 
+
+    function isExistingOwner(userId) {
+     return isOwner(userId) && resource != null;
+    }
+ 
+
+    allow get: if isOwner(userId);
+    allow list: if isOwner(userId);
+    allow create: if isOwner(userId) && request.resource.data.userId == userId;
+    allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId; //Enforce immutability of userId
+    allow delete: if isExistingOwner(userId);
+   }
+ 
+
+   /**
+    * @description Allows public read access to daily reward information.
+    * @path /daily_rewards/{rewardId}
+    * @allow (get, list) - Any user can read daily reward information.
+    * @deny (create, update, delete) - Only admins can create, update, or delete daily rewards.
+    * @principle Grants public read access while restricting write access.
+    */
+   match /daily_rewards/{rewardId} {
+    allow get, list: if true;
+    allow create, update, delete: if false;
+   }
+ 
+
+   /**
+    * @description Secures user daily reward claim information, accessible only by the user.
+    * @path /users/{userId}/daily_rewards_claimed/{rewardClaimId}
+    * @allow (create) - Authenticated user creates their own daily reward claim record.
+    * @allow (get, list) - Authenticated user reads their own daily reward claim records.
+    * @allow (update, delete) - Authenticated user updates/deletes their own daily reward claim record.
+    * @deny (create) - Unauthenticated user attempts to create a daily reward claim record.
+    * @deny (get, list) - Authenticated user attempts to read another user's daily reward claim records.
+    * @deny (update, delete) - Authenticated user attempts to update/delete another user's daily reward claim records.
+    * @principle Enforces document ownership for all operations.
+    */
+   match /users/{userId}/daily_rewards_claimed/{rewardClaimId} {
+    function isSignedIn() {
+     return request.auth != null;
+    }
+ 
+
+    function isOwner(userId) {
+     return isSignedIn() && request.auth.uid == userId;
+    }
+ 
+
+    function isExistingOwner(userId) {
+     return isOwner(userId) && resource != null;
+    }
+ 
+
+    allow get: if isOwner(userId);
+    allow list: if isOwner(userId);
+    allow create: if isOwner(userId) && request.resource.data.userId == userId;
+    allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId; //Enforce immutability of userId
+    allow delete: if isExistingOwner(userId);
+   }
+ 
+
+   /**
+    * @description Secures product purchase information, accessible only by the user.
+    * @path /users/{userId}/product_purchases/{purchaseId}
+    * @allow (create) - Authenticated user creates their own product purchase record.
+    * @allow (get, list) - Authenticated user reads their own product purchase records.
+    * @allow (update, delete) - Authenticated user updates/deletes their own product purchase record.
+    * @deny (create) - Unauthenticated user attempts to create a product purchase record.
+    * @deny (get, list) - Authenticated user attempts to read another user's product purchase records.
+    * @deny (update, delete) - Authenticated user attempts to update/delete another user's product purchase records.
+    * @principle Enforces document ownership for all operations.
+    */
+   match /users/{userId}/product_purchases/{purchaseId} {
+    function isSignedIn() {
+     return request.auth != null;
+    }
+ 
+
+    function isOwner(userId) {
+     return isSignedIn() && request.auth.uid == userId;
+    }
+ 
+
+    function isExistingOwner(userId) {
+     return isOwner(userId) && resource != null;
+    }
+ 
+
+    allow get: if isOwner(userId);
+    allow list: if isOwner(userId);
+    allow create: if isOwner(userId) && request.resource.data.userId == userId;
+    allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId; //Enforce immutability of userId
+    allow delete: if isExistingOwner(userId);
+   }
+  }
+ }
