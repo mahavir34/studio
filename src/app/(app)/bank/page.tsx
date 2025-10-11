@@ -28,7 +28,7 @@ declare global {
 export default function BankPage() {
   const { user } = useUser();
   const [amount, setAmount] = useState('10.00'); // Default amount for PayPal
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const paypalButtonContainer = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const [isPayPalReady, setIsPayPalReady] = useState(false);
@@ -49,7 +49,6 @@ export default function BankPage() {
         // Prevent re-rendering if buttons are already there.
         if (paypalButtonContainer.current.innerHTML !== '') return;
 
-        setLoading(true);
         window.paypal.Buttons({
             createOrder: async (data: any, actions: any) => {
                 const numAmount = parseFloat(amount);
@@ -129,18 +128,17 @@ export default function BankPage() {
                     placeholder="Enter amount in USD"
                     value={amount}
                     onChange={handleAmountChange}
-                    disabled={loading}
                   />
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <Button type="button" variant="outline" onClick={() => setPresetAmount(10)} disabled={loading}>$10</Button>
-                  <Button type="button" variant="outline" onClick={() => setPresetAmount(20)} disabled={loading}>$20</Button>
-                  <Button type="button" variant="outline" onClick={() => setPresetAmount(50)} disabled={loading}>$50</Button>
-                  <Button type="button" variant="outline" onClick={() => setPresetAmount(100)} disabled={loading}>$100</Button>
-                  <Button type="button" variant="outline" onClick={() => setPresetAmount(200)} disabled={loading}>$200</Button>
-                  <Button type="button" variant="outline" onClick={() => setPresetAmount(500)} disabled={loading}>$500</Button>
+                  <Button type="button" variant="outline" onClick={() => setPresetAmount(10)}>$10</Button>
+                  <Button type="button" variant="outline" onClick={() => setPresetAmount(20)}>$20</Button>
+                  <Button type="button" variant="outline" onClick={() => setPresetAmount(50)}>$50</Button>
+                  <Button type="button" variant="outline" onClick={() => setPresetAmount(100)}>$100</Button>
+                  <Button type="button" variant="outline" onClick={() => setPresetAmount(200)}>$200</Button>
+                  <Button type="button" variant="outline" onClick={() => setPresetAmount(500)}>$500</Button>
                 </div>
-                {loading && !isPayPalReady && (
+                {loading && (
                     <div className="flex justify-center items-center">
                         <Loader2 className="mr-2 h-6 w-6 animate-spin" />
                         <span>Loading PayPal...</span>
