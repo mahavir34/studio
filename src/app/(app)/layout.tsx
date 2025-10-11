@@ -24,6 +24,7 @@ import { Chatbot } from '@/components/chatbot';
 import { useUser } from '@/firebase';
 import { getAuth, signOut } from 'firebase/auth';
 import { redirect, useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -65,9 +66,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="font-semibold text-lg">
              {userBalance.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
           </div>
-          <Button variant="outline" size="sm">
-            Bank
-            <Landmark className="ml-2 h-4 w-4" />
+          <Button asChild variant="outline" size="sm">
+            <Link href="/bank">
+              Bank
+              <Landmark className="ml-2 h-4 w-4" />
+            </Link>
           </Button>
           <Button variant="outline" size="sm">
             English
