@@ -31,6 +31,7 @@ export default function BankPage() {
   const [loading, setLoading] = useState(false);
   const paypalButtonContainer = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const [isPayPalReady, setIsPayPalReady] = useState(false);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -38,11 +39,15 @@ export default function BankPage() {
   };
 
   useEffect(() => {
-    if (window.paypal && paypalButtonContainer.current && user) {
-        // To avoid re-rendering the button unnecessarily, clear the container first
-        if (paypalButtonContainer.current) {
-            paypalButtonContainer.current.innerHTML = '';
-        }
+    if (window.paypal) {
+        setIsPayPalReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isPayPalReady && paypalButtonContainer.current && user) {
+        // Prevent re-rendering if buttons are already there.
+        if (paypalButtonContainer.current.innerHTML !== '') return;
 
         setLoading(true);
         window.paypal.Buttons({
@@ -50,14 +55,14 @@ export default function BankPage() {
                 const numAmount = parseFloat(amount);
                 if (isNaN(numAmount) || numAmount <= 0) {
                     toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Please enter a valid amount.' });
-                    return;
+                    throw new Error('Invalid amount');
                 }
                 const order = await createPayPalOrder({ amount: numAmount, userId: user.uid });
                 if (order.id) {
                     return order.id;
                 } else {
                     toast({ variant: 'destructive', title: 'Order Error', description: order.error || 'Could not create PayPal order.' });
-                    return;
+                    throw new Error(order.error || 'Could not create PayPal order.');
                 }
             },
             onApprove: async (data: any, actions: any) => {
@@ -86,7 +91,7 @@ export default function BankPage() {
             setLoading(false);
         });
     }
-  }, [amount, user, toast]);
+  }, [isPayPalReady, user, toast]); // Removed 'amount' from dependencies
 
 
   const setPresetAmount = (preset: number) => {
