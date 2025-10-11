@@ -111,7 +111,9 @@ export default function DashboardPage() {
                   </div>
                 </CardContent>
                 <CardFooter className="p-4 pt-0">
-                  <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">Invest</Button>
+                   <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                    <Link href={`/invest/${product.id}`}>Invest</Link>
+                  </Button>
                 </CardFooter>
               </Card>
             )
