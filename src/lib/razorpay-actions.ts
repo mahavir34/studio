@@ -7,26 +7,32 @@ import crypto from 'crypto';
 const amountSchema = z.string().transform(v => parseFloat(v)).pipe(z.number().positive());
 const userIdSchema = z.string().min(1);
 
+type CreateOrderState = {
+  orderId: string | null;
+  amount: number | null;
+  error: string | null;
+}
+
 export async function createRazorpayOrder(
-  prevState: { orderId: string | null; error: string | null },
+  prevState: CreateOrderState,
   formData: FormData
-) {
+): Promise<CreateOrderState> {
   const amountResult = amountSchema.safeParse(formData.get('amount'));
   const userIdResult = userIdSchema.safeParse(formData.get('userId'));
   
   if (!amountResult.success || !userIdResult.success) {
-    return { orderId: null, error: 'Invalid amount or user ID.' };
+    return { orderId: null, amount: null, error: 'Invalid amount or user ID.' };
   }
 
   const amount = amountResult.data;
   
-  if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
       console.error("Razorpay keys are not set in .env file");
-      return { orderId: null, error: 'Payment service is not configured.' };
+      return { orderId: null, amount: null, error: 'Payment service is not configured.' };
   }
 
   const razorpay = new Razorpay({
-    key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+    key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET,
   });
 
@@ -39,12 +45,12 @@ export async function createRazorpayOrder(
   try {
     const order = await razorpay.orders.create(options);
     if (!order) {
-      return { orderId: null, error: 'Could not create payment order.' };
+      return { orderId: null, amount: null, error: 'Could not create payment order.' };
     }
-    return { orderId: order.id, error: null };
+    return { orderId: order.id, amount: amount, error: null };
   } catch (error) {
     console.error('Razorpay order creation failed:', error);
-    return { orderId: null, error: 'Could not create payment order. An unknown error occurred.' };
+    return { orderId: null, amount: null, error: 'Could not create payment order. An unknown error occurred.' };
   }
 }
 

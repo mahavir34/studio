@@ -30,6 +30,7 @@ declare global {
 
 type OrderState = {
   orderId: string | null;
+  amount: number | null;
   error: string | null;
 }
 
@@ -40,6 +41,7 @@ type VerificationState = {
 
 const initialOrderState: OrderState = {
   orderId: null,
+  amount: null,
   error: null,
 };
 
@@ -74,18 +76,19 @@ export default function BankPage() {
     setAmount(String(preset));
   };
 
-  const handleRazorpayPayment = (orderId: string) => {
-    if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
+  const handleRazorpayPayment = (orderId: string, orderAmount: number) => {
+    const key = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+     if (!key) {
       toast({
         variant: 'destructive',
         title: 'Configuration Error',
-        description: 'Razorpay Key ID is not set.',
+        description: 'Razorpay Key ID is not set for the client.',
       });
       return;
     }
     const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: parseFloat(amount) * 100,
+        key: key,
+        amount: orderAmount * 100,
         currency: "INR",
         name: "AI Cash Gaming",
         description: "Recharge Transaction",
@@ -117,8 +120,8 @@ export default function BankPage() {
   }
 
   useEffect(() => {
-    if (orderState.orderId) {
-      handleRazorpayPayment(orderState.orderId);
+    if (orderState.orderId && orderState.amount) {
+      handleRazorpayPayment(orderState.orderId, orderState.amount);
     }
     if (orderState.error) {
       toast({
@@ -133,7 +136,7 @@ export default function BankPage() {
     if (verificationState.success) {
         toast({
             title: 'Payment Successful',
-            description: `₹${amount} has been added to your account.`,
+            description: `Your recharge has been processed.`,
         });
         // Here you would typically update the user's balance in Firestore
     }
