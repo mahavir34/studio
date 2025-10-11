@@ -14,7 +14,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images'
 import { Badge } from '@/components/ui/badge'
 
 export default function DashboardPage() {
-  const userBalance = 12500.75
+  const userBalance = 20000.00
 
   const getImage = (imageId: string) => {
     return PlaceHolderImages.find((img) => img.id === imageId)
@@ -24,30 +24,25 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <section>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="lg:col-span-2">
+          <Card className="lg:col-span-2 bg-card/50">
             <CardHeader>
-              <CardTitle>Your Balance</CardTitle>
-              <CardDescription>Available to invest or withdraw</CardDescription>
+              <CardTitle>Earnings & Withdrawals</CardTitle>
+              <CardDescription>Your current balance is ${userBalance.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-bold tracking-tight">
-                ${userBalance.toLocaleString('en-US')}
-              </p>
-            </CardContent>
-            <CardFooter className="gap-2">
-                <Button size="lg" className="flex-1">
+            <CardContent className="grid grid-cols-2 gap-4">
+                <Button size="lg" className="flex-1 bg-red-600 hover:bg-red-700 text-white">
                   <ArrowUpCircle className="mr-2 h-5 w-5" /> Recharge
                 </Button>
-                 <Button variant="secondary" size="lg" className="flex-1">
+                 <Button size="lg" className="flex-1 bg-green-600 hover:bg-green-700 text-white">
                   <ArrowDownCircle className="mr-2 h-5 w-5" /> Withdraw
                 </Button>
-            </CardFooter>
+            </CardContent>
           </Card>
           
           <Card className="bg-gradient-to-br from-accent to-purple-600 text-accent-foreground flex flex-col justify-between">
              <CardHeader>
                <CardTitle>Daily Reward</CardTitle>
-               <CardDescription className="text-purple-200">Check-in to claim your bonus!</CardDescription>
+               <CardDescription className="text-purple-200">Invite Friends, Earn Bonuses!</CardDescription>
              </CardHeader>
              <CardContent>
                 <Button variant="ghost" className="bg-white/20 hover:bg-white/30 text-white w-full">
@@ -59,12 +54,12 @@ export default function DashboardPage() {
       </section>
 
       <section>
-        <h2 className="text-2xl font-bold mb-4">Investment Products</h2>
+        <h2 className="text-2xl font-bold mb-4">Investment Opportunities</h2>
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {investmentProducts.map((product) => {
             const image = getImage(product.imageId)
             return (
-              <Card key={product.id} className="overflow-hidden flex flex-col group hover:shadow-lg transition-shadow duration-300">
+              <Card key={product.id} className="overflow-hidden flex flex-col group hover:shadow-lg transition-shadow duration-300 bg-card/50">
                 <div className="relative">
                   {image && (
                     <Image
@@ -89,12 +84,12 @@ export default function DashboardPage() {
                 <CardContent className="flex-grow space-y-4">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="space-y-1">
-                      <p className="text-muted-foreground">Price</p>
-                      <p className="font-semibold">${product.price}</p>
+                      <p className="text-muted-foreground">Invest</p>
+                      <p className="font-semibold">₹{product.price}</p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-muted-foreground">Daily Return</p>
-                      <p className="font-semibold">${product.dailyReturn}</p>
+                      <p className="text-muted-foreground">Daily</p>
+                      <p className="font-semibold">₹{product.dailyReturn}</p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-muted-foreground">Cycle</p>
@@ -102,12 +97,12 @@ export default function DashboardPage() {
                     </div>
                     <div className="space-y-1">
                       <p className="text-muted-foreground">Total Return</p>
-                      <p className="font-semibold text-chart-2">${product.totalReturn}</p>
+                      <p className="font-semibold text-chart-2">₹{product.totalReturn}</p>
                     </div>
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">Buy Now</Button>
+                  <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">Invest Now</Button>
                 </CardFooter>
               </Card>
             )

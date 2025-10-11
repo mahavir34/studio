@@ -9,56 +9,41 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarTrigger,
-  SidebarInset,
-  SidebarFooter,
-} from '@/components/ui/sidebar';
-import {
-  Wallet,
   LogOut,
   Settings,
+  Wallet,
+  Globe,
 } from 'lucide-react';
 import { MainNav } from '@/components/main-nav';
 import { Chatbot } from '@/components/chatbot';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const userBalance = 20000.00;
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center gap-2 p-2">
+    <div className="flex flex-col min-h-screen bg-background">
+      <header className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center gap-2">
             <div className="p-2 bg-primary rounded-lg text-primary-foreground">
               <Wallet className="w-6 h-6" />
             </div>
-            <h1 className="text-xl font-semibold">AI Cash</h1>
+            <h1 className="text-xl font-semibold">AI CASH GAMING</h1>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="font-semibold text-lg">
+             {userBalance.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
           </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <MainNav />
-        </SidebarContent>
-        <SidebarFooter>
+          <Button variant="outline" size="sm">
+            English
+            <Globe className="ml-2 h-4 w-4" />
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="justify-start w-full p-2 h-auto">
-                <div className="flex justify-between items-center w-full">
-                  <div className="flex gap-2 items-center">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src="https://picsum.photos/seed/user-avatar/40/40" data-ai-hint="profile picture" />
-                      <AvatarFallback>U</AvatarFallback>
-                    </Avatar>
-                    <div className="text-left">
-                      <p className="text-sm font-medium">User</p>
-                      <p className="text-xs text-muted-foreground">user@example.com</p>
-                    </div>
-                  </div>
-                </div>
-              </Button>
+                <Avatar className="h-9 w-9 cursor-pointer">
+                  <AvatarImage src="https://picsum.photos/seed/user-avatar/40/40" data-ai-hint="profile picture" />
+                  <AvatarFallback>U</AvatarFallback>
+                </Avatar>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 mb-2 ml-2" side="top" align="start">
+            <DropdownMenuContent className="w-56" align="end">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
@@ -71,18 +56,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset>
-        <header className="flex items-center justify-between p-4 border-b bg-card md:bg-transparent">
-          <SidebarTrigger className="md:hidden"/>
-          <div/>
-          <Chatbot />
-        </header>
-        <main className="flex-1 p-4 md:p-6 lg:p-8 bg-background">
+        </div>
+      </header>
+        <main className="flex-1 p-4 md:p-6 lg:p-8">
             {children}
         </main>
-      </SidebarInset>
-    </SidebarProvider>
+      <Chatbot />
+      <footer className="sticky bottom-0 md:hidden bg-card border-t">
+        <MainNav />
+      </footer>
+    </div>
   );
 }

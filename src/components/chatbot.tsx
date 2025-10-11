@@ -26,14 +26,14 @@ type Message = {
 
 const initialState = {
   userMessage: "",
-  botMessage: "Hello! How can I help you with AI Cash Gaming today?",
+  botMessage: "Hello! Let's explore winning strategies.",
   error: null,
 }
 
 function SubmitButton() {
   const { pending } = useFormStatus()
   return (
-    <Button type="submit" size="icon" disabled={pending} className="bg-accent hover:bg-accent/90">
+    <Button type="submit" size="icon" disabled={pending} className="bg-primary hover:bg-primary/90">
       {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
       <span className="sr-only">Send</span>
     </Button>
@@ -71,18 +71,23 @@ export function Chatbot() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="rounded-full w-10 h-10 bg-accent text-accent-foreground hover:bg-accent/90 hover:text-accent-foreground">
-          <MessageCircle className="h-5 w-5" />
+        <Button variant="outline" size="icon" className="fixed bottom-20 right-4 rounded-full w-14 h-14 bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground shadow-lg">
+          <MessageCircle className="h-7 w-7" />
           <span className="sr-only">Open Support Chat</span>
         </Button>
       </SheetTrigger>
-      <SheetContent className="flex flex-col w-full sm:max-w-md">
+      <SheetContent className="flex flex-col w-full sm:max-w-md bg-card/80 backdrop-blur-sm">
         <SheetHeader>
-          <SheetTitle>Customer Support</SheetTitle>
+          <SheetTitle>Hello! Let's explore winning strategies</SheetTitle>
           <SheetDescription>
             Our AI assistant is here to help you. Ask a question below.
           </SheetDescription>
         </SheetHeader>
+        <div className="flex-1 my-4 pr-4">
+            <div className="flex flex-col items-center justify-center h-full text-center">
+                 <img src="https://storage.googleapis.com/project-spark-341015.appspot.com/71401343-4f98-4389-9b98-50478799af35" alt="Chatbot mascot" className="w-48 h-48" />
+            </div>
+        </div>
         <ScrollArea className="flex-1 my-4 pr-4" viewportRef={viewportRef}>
           <div className="space-y-6">
             {messages.map((message, index) => (
@@ -97,7 +102,7 @@ export function Chatbot() {
                   className={`rounded-lg px-4 py-2 max-w-[80%] shadow-sm ${
                     message.type === "user"
                       ? "bg-primary text-primary-foreground"
-                      : "bg-card"
+                      : "bg-background"
                   }`}
                 >
                   <p className="text-sm">{message.text}</p>

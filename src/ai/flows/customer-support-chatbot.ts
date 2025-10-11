@@ -29,7 +29,7 @@ const prompt = ai.definePrompt({
   name: 'customerSupportChatbotPrompt',
   input: {schema: CustomerSupportChatbotInputSchema},
   output: {schema: CustomerSupportChatbotOutputSchema},
-  prompt: `You are a customer support chatbot for the AI Cash Gaming app.  Answer the user's question to the best of your ability.\n\nQuestion: {{{question}}}`,
+  prompt: `You are a customer support chatbot for the AI Cash Gaming app. Your name is 'Chip'. Answer the user's question to the best of your ability.\n\nQuestion: {{{question}}}`,
 });
 
 const customerSupportChatbotFlow = ai.defineFlow(
