@@ -35,7 +35,7 @@ export default function BankPage() {
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setAmount(value);
-  }
+  };
 
   useEffect(() => {
     if (window.paypal && paypalButtonContainer.current && user) {
@@ -151,7 +151,7 @@ export default function BankPage() {
                 <CardHeader>
                     <CardTitle>Withdraw Funds</CardTitle>
                     <CardDescription>Transfer your earnings to your bank account.</CardDescription>
-                </Header>
+                </CardHeader>
                 <CardContent className="space-y-4">
                      <div className="space-y-2">
                       <Label htmlFor="withdrawal-amount">Amount</Label>
