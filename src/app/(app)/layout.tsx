@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,25 +23,29 @@ import { MainNav } from '@/components/main-nav';
 import { Chatbot } from '@/components/chatbot';
 import { useUser } from '@/firebase';
 import { getAuth, signOut } from 'firebase/auth';
-import { redirect } from 'next/navigation';
+import { redirect, useRouter } from 'next/navigation';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const auth = getAuth();
+  const router = useRouter();
   
   const userBalance = 20000.00;
 
-  if (isUserLoading) {
+  useEffect(() => {
+    // Only run this logic on the client side after the initial render.
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
+
+
+  if (isUserLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-16 w-16 animate-spin" />
       </div>
     );
-  }
-
-  if (!user) {
-    redirect('/login');
-    return null;
   }
 
   const handleLogout = () => {
