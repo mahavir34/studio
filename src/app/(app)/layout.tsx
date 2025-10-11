@@ -1,3 +1,5 @@
+'use client';
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,12 +16,37 @@ import {
   Wallet,
   Globe,
   Landmark,
+  Loader2,
 } from 'lucide-react';
 import { MainNav } from '@/components/main-nav';
 import { Chatbot } from '@/components/chatbot';
+import { useUser } from '@/firebase';
+import { getAuth, signOut } from 'firebase/auth';
+import { redirect } from 'next/navigation';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const { user, isUserLoading } = useUser();
+  const auth = getAuth();
+  
   const userBalance = 20000.00;
+
+  if (isUserLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-16 w-16 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    redirect('/login');
+    return null;
+  }
+
+  const handleLogout = () => {
+    signOut(auth);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="flex items-center justify-between p-4 border-b">
@@ -44,18 +71,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Avatar className="h-9 w-9 cursor-pointer">
-                  <AvatarImage src="https://picsum.photos/seed/user-avatar/40/40" data-ai-hint="profile picture" />
-                  <AvatarFallback>U</AvatarFallback>
+                  <AvatarImage src={user.photoURL || "https://picsum.photos/seed/user-avatar/40/40"} data-ai-hint="profile picture" />
+                  <AvatarFallback>{user.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
                 </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>

@@ -1,15 +1,11 @@
+
 {
   "entities": {
     "UserProfile": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "UserProfile",
+      "title": "User Profile",
       "type": "object",
       "description": "Represents a user profile in the AI Cash Gaming app.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the UserProfile entity."
-        },
         "username": {
           "type": "string",
           "description": "User's chosen username."
@@ -29,8 +25,7 @@
         },
         "referredBy": {
           "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N UserProfile) The referral code of the user who referred this user.",
-          "format": "uuid"
+          "description": "The referral code of the user who referred this user."
         },
         "language": {
           "type": "string",
@@ -38,22 +33,16 @@
         }
       },
       "required": [
-        "id",
         "username",
         "email",
         "balance"
       ]
     },
     "InvestmentProduct": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "InvestmentProduct",
+      "title": "Investment Product",
       "type": "object",
       "description": "Represents an investment product offered in the AI Cash Gaming app.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the InvestmentProduct entity."
-        },
         "name": {
           "type": "string",
           "description": "Name of the investment product."
@@ -84,7 +73,6 @@
         }
       },
       "required": [
-        "id",
         "name",
         "description",
         "apy",
@@ -93,22 +81,17 @@
       ]
     },
     "UserInvestment": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "UserInvestment",
+      "title": "User Investment",
       "type": "object",
       "description": "Represents a user's investment in a specific product.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the UserInvestment entity."
-        },
         "userId": {
           "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N UserInvestment)"
+          "description": "Reference to UserProfile."
         },
         "productId": {
           "type": "string",
-          "description": "Reference to InvestmentProduct. (Relationship: InvestmentProduct 1:N UserInvestment)"
+          "description": "Reference to InvestmentProduct."
         },
         "investmentAmount": {
           "type": "number",
@@ -130,7 +113,6 @@
         }
       },
       "required": [
-        "id",
         "userId",
         "productId",
         "investmentAmount",
@@ -140,22 +122,17 @@
       ]
     },
     "ReferralReward": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ReferralReward",
+      "title": "Referral Reward",
       "type": "object",
       "description": "Represents a referral reward earned by a user.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the ReferralReward entity."
-        },
         "referrerId": {
           "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N ReferralReward) The user who made the referral."
+          "description": "The user who made the referral."
         },
         "referredUserId": {
           "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N ReferralReward) The user who was referred."
+          "description": "The user who was referred."
         },
         "level": {
           "type": "number",
@@ -176,7 +153,6 @@
         }
       },
       "required": [
-        "id",
         "referrerId",
         "referredUserId",
         "level",
@@ -186,15 +162,10 @@
       ]
     },
     "AchievementTask": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "AchievementTask",
+      "title": "Achievement Task",
       "type": "object",
       "description": "Represents an achievement task in the AI Cash Gaming app.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the AchievementTask entity."
-        },
         "name": {
           "type": "string",
           "description": "Name of the achievement task."
@@ -213,7 +184,6 @@
         }
       },
       "required": [
-        "id",
         "name",
         "description",
         "rewardAmount",
@@ -221,22 +191,17 @@
       ]
     },
     "UserAchievement": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "UserAchievement",
+      "title": "User Achievement",
       "type": "object",
       "description": "Represents a user's progress on an achievement task.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the UserAchievement entity."
-        },
         "userId": {
           "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N UserAchievement)"
+          "description": "Reference to UserProfile."
         },
         "taskId": {
           "type": "string",
-          "description": "Reference to AchievementTask. (Relationship: AchievementTask 1:N UserAchievement)"
+          "description": "Reference to AchievementTask."
         },
         "isCompleted": {
           "type": "boolean",
@@ -249,22 +214,16 @@
         }
       },
       "required": [
-        "id",
         "userId",
         "taskId",
         "isCompleted"
       ]
     },
     "DailyReward": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "DailyReward",
+      "title": "Daily Reward",
       "type": "object",
       "description": "Represents a daily reward available to users.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the DailyReward entity."
-        },
         "dayNumber": {
           "type": "number",
           "description": "The day number in the sequence of daily rewards (e.g., 1, 2, 3...)."
@@ -279,28 +238,22 @@
         }
       },
       "required": [
-        "id",
         "dayNumber",
         "rewardAmount"
       ]
     },
     "UserDailyReward": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "UserDailyReward",
+      "title": "User Daily Reward",
       "type": "object",
       "description": "Represents a user's claim of a daily reward.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the UserDailyReward entity."
-        },
         "userId": {
           "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N UserDailyReward)"
+          "description": "Reference to UserProfile."
         },
         "rewardId": {
           "type": "string",
-          "description": "Reference to DailyReward. (Relationship: DailyReward 1:N UserDailyReward)"
+          "description": "Reference to DailyReward."
         },
         "claimDate": {
           "type": "string",
@@ -309,29 +262,23 @@
         }
       },
       "required": [
-        "id",
         "userId",
         "rewardId",
         "claimDate"
       ]
     },
     "ProductPurchase": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ProductPurchase",
+      "title": "Product Purchase",
       "type": "object",
       "description": "Represents a user's purchase of a product in the app.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the ProductPurchase entity."
-        },
         "userId": {
           "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N ProductPurchase)"
+          "description": "Reference to UserProfile."
         },
         "productId": {
           "type": "string",
-          "description": "Reference to InvestmentProduct. (Relationship: InvestmentProduct 1:N ProductPurchase)"
+          "description": "Reference to InvestmentProduct."
         },
         "purchaseDate": {
           "type": "string",
@@ -344,187 +291,78 @@
         }
       },
       "required": [
-        "id",
         "userId",
         "productId",
         "purchaseDate",
         "purchasePrice"
       ]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "type": "object",
+      "description": "Represents a financial transaction (recharge or withdrawal).",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who initiated the transaction."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["recharge", "withdrawal"]
+        },
+        "amount": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "completed", "failed"]
+        },
+        "gateway": {
+          "type": "string",
+          "description": "Payment gateway used (e.g., 'razorpay', 'paytm')."
+        },
+        "gatewayTransactionId": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "type", "amount", "status", "createdAt"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password", "anonymous"]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/backend/entities/UserProfile"
-          },
-          "description": "Stores user profile information. Uses path-based ownership for security.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
-          ]
-        }
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
       },
-      {
-        "path": "/investment_products/{productId}",
-        "definition": {
-          "entityName": "InvestmentProduct",
-          "schema": {
-            "$ref": "#/backend/entities/InvestmentProduct"
-          },
-          "description": "Stores information about available investment products.",
-          "params": [
-            {
-              "name": "productId",
-              "description": "The unique identifier for the investment product."
-            }
-          ]
-        }
+      "description": "Stores user profile information."
+    },
+    "/investment_products/{productId}": {
+      "schema": {
+        "$ref": "#/entities/InvestmentProduct"
       },
-      {
-        "path": "/users/{userId}/investments/{investmentId}",
-        "definition": {
-          "entityName": "UserInvestment",
-          "schema": {
-            "$ref": "#/backend/entities/UserInvestment"
-          },
-          "description": "Stores user's investment information. Uses path-based ownership for security.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "investmentId",
-              "description": "The unique identifier for the user's investment."
-            }
-          ]
-        }
+      "description": "Stores details of available investment products."
+    },
+    "/users/{userId}/investments/{investmentId}": {
+      "schema": {
+        "$ref": "#/entities/UserInvestment"
       },
-      {
-        "path": "/users/{userId}/referral_rewards/{rewardId}",
-        "definition": {
-          "entityName": "ReferralReward",
-          "schema": {
-            "$ref": "#/backend/entities/ReferralReward"
-          },
-          "description": "Stores referral reward information for a user. Uses path-based ownership for security.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "rewardId",
-              "description": "The unique identifier for the referral reward."
-            }
-          ]
-        }
+      "description": "Stores a user's investments."
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": {
+        "$ref": "#/entities/Transaction"
       },
-      {
-        "path": "/achievement_tasks/{taskId}",
-        "definition": {
-          "entityName": "AchievementTask",
-          "schema": {
-            "$ref": "#/backend/entities/AchievementTask"
-          },
-          "description": "Stores information about available achievement tasks.",
-          "params": [
-            {
-              "name": "taskId",
-              "description": "The unique identifier for the achievement task."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/achievements/{achievementId}",
-        "definition": {
-          "entityName": "UserAchievement",
-          "schema": {
-            "$ref": "#/backend/entities/UserAchievement"
-          },
-          "description": "Stores user's achievement progress. Uses path-based ownership for security.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "achievementId",
-              "description": "The unique identifier for the user's achievement."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/daily_rewards/{rewardId}",
-        "definition": {
-          "entityName": "DailyReward",
-          "schema": {
-            "$ref": "#/backend/entities/DailyReward"
-          },
-          "description": "Stores information about available daily rewards.",
-          "params": [
-            {
-              "name": "rewardId",
-              "description": "The unique identifier for the daily reward."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/daily_rewards_claimed/{rewardClaimId}",
-        "definition": {
-          "entityName": "UserDailyReward",
-          "schema": {
-            "$ref": "#/backend/entities/UserDailyReward"
-          },
-          "description": "Stores information about a user's claimed daily rewards. Uses path-based ownership for security.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "rewardClaimId",
-              "description": "The unique identifier for the user's daily reward claim."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/product_purchases/{purchaseId}",
-        "definition": {
-          "entityName": "ProductPurchase",
-          "schema": {
-            "$ref": "#/backend/entities/ProductPurchase"
-          },
-          "description": "Stores product purchase information for a user. Uses path-based ownership for security.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "purchaseId",
-              "description": "The unique identifier for the product purchase."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The Firestore structure is designed to support the AI Cash Gaming app's features, focusing on user profiles, investment products, user investments, referrals, achievements, daily rewards, and product purchases. It prioritizes authorization independence and efficient data retrieval.\n\n- **User Profiles:** User profiles are stored under the `/users/{userId}` path, providing a secure and scalable way to manage user-specific data.  This follows the recommended path-based ownership model.\n- **Investment Products:** Investment products are stored in a global `/investment_products` collection. This allows for easy listing and querying of available products. Since these are global, no denormalization is needed.\n- **User Investments:** User investments are stored under `/users/{userId}/investments/{investmentId}`, ensuring clear ownership and easy retrieval of a user's investments. This continues the hierarchical ownership model.\n- **Referral Rewards:** Referral rewards are stored under `/users/{userId}/referral_rewards/{rewardId}`, linking rewards directly to the user who received them. This maintains ownership and simplifies reward-related queries.\n- **Achievement Tasks:** Achievement tasks are stored in a global `/achievement_tasks` collection, similar to investment products.  This facilitates easy listing and querying of available tasks.\n- **User Achievements:** User achievements are stored under `/users/{userId}/achievements/{achievementId}`, tracking a user's progress on specific tasks.  This follows the hierarchical ownership model.\n- **Daily Rewards:** Daily rewards are stored in a global `/daily_rewards` collection, similar to investment products and achievement tasks.  This allows for straightforward management of daily rewards.\n- **User Daily Rewards:** User daily reward claims are stored under `/users/{userId}/daily_rewards_claimed/{rewardClaimId}`, linking claims to the user who claimed the reward.  This continues the hierarchical ownership model.\n- **Product Purchases:** Product purchases are stored under `/users/{userId}/product_purchases/{purchaseId}`, associating purchases with the user who made them.  This follows the hierarchical ownership model.\n\nThis structure achieves **Authorization Independence** by avoiding `get()` calls in security rules.  User-specific data is stored directly under the `/users/{userId}` path or its subcollections, eliminating the need to fetch parent document data for authorization. For example, `UserInvestment` documents are located at `/users/{userId}/investments/{investmentId}`, automatically granting the user access based on the path.  No denormalization is required in this structure as Authorization Independence is achieved through path-based ownership.\n\nThis structure also supports the required **QAPs (Rules are not Filters)** by segregating data based on ownership.  List operations are secure because rules can efficiently check the path to ensure a user is only accessing their own data or publicly available data.  Global collections such as `investment_products`, `achievement_tasks` and `daily_rewards` are considered public and can be secured using validation rules, without relying on filtering."
+      "description": "Stores user's recharge and withdrawal history."
+    }
   }
 }
