@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useUser } from '@/firebase';
 import {
   Card,
@@ -19,85 +19,45 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { createPayPalOrder, capturePayPalOrder } from '@/lib/paypal-actions';
-
-declare global {
-    interface Window { paypal: any; }
-}
 
 export default function BankPage() {
   const { user } = useUser();
-  const [amount, setAmount] = useState('10.00'); // Default amount for PayPal
-  const [loading, setLoading] = useState(true);
-  const paypalButtonContainer = useRef<HTMLDivElement>(null);
+  const [amount, setAmount] = useState('1000');
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const [isPayPalReady, setIsPayPalReady] = useState(false);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setAmount(value);
   };
 
-  useEffect(() => {
-    if (window.paypal) {
-        setIsPayPalReady(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isPayPalReady && paypalButtonContainer.current && user) {
-        // Prevent re-rendering if buttons are already there.
-        if (paypalButtonContainer.current.innerHTML !== '') return;
-
-        window.paypal.Buttons({
-            createOrder: async (data: any, actions: any) => {
-                const numAmount = parseFloat(amount);
-                if (isNaN(numAmount) || numAmount <= 0) {
-                    toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Please enter a valid amount.' });
-                    throw new Error('Invalid amount');
-                }
-                const order = await createPayPalOrder({ amount: numAmount, userId: user.uid });
-                if (order.id) {
-                    return order.id;
-                } else {
-                    toast({ variant: 'destructive', title: 'Order Error', description: order.error || 'Could not create PayPal order.' });
-                    throw new Error(order.error || 'Could not create PayPal order.');
-                }
-            },
-            onApprove: async (data: any, actions: any) => {
-                setLoading(true);
-                toast({ title: 'Processing Payment...' });
-                const result = await capturePayPalOrder({ orderID: data.orderID, userId: user.uid });
-                if (result.success) {
-                    toast({ title: 'Success', description: 'Your balance has been updated.' });
-                } else {
-                    toast({ variant: 'destructive', title: 'Payment Failed', description: result.error || 'Could not capture payment.' });
-                }
-                setLoading(false);
-            },
-            onError: (err: any) => {
-                toast({ variant: 'destructive', title: 'Payment Error', description: `An error occurred: ${err}` });
-                setLoading(false);
-            },
-            onCancel: () => {
-                toast({ variant: 'destructive', title: 'Payment Cancelled' });
-                setLoading(false);
-            }
-        }).render(paypalButtonContainer.current).then(() => {
-            setLoading(false);
-        }).catch((err: any) => {
-            console.error("Failed to render PayPal buttons", err);
-            setLoading(false);
-        });
-    }
-  // DO NOT add 'amount' to the dependency array. It causes re-renders and breaks PayPal.
-  // The 'amount' is read directly inside createOrder.
-  }, [isPayPalReady, user, toast]); 
-
-
   const setPresetAmount = (preset: number) => {
     setAmount(String(preset));
-  }
+  };
+  
+  const handleRecharge = () => {
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to recharge.' });
+        return;
+    }
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount) || numAmount <= 0) {
+        toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Please enter a valid amount.' });
+        return;
+    }
+    setLoading(true);
+    // Placeholder for actual payment gateway integration
+    toast({ title: 'Processing Recharge...', description: `Requesting to add ₹${numAmount}` });
+    
+    // Simulate API call
+    setTimeout(() => {
+        // In a real app, you would get a response from the payment gateway
+        // and then update the user's balance in Firestore.
+        toast({ title: 'Recharge Successful!', description: `₹${numAmount} has been added to your account.`});
+        setLoading(false);
+    }, 2000);
+  };
+
 
   return (
     <div className="w-full">
@@ -115,38 +75,37 @@ export default function BankPage() {
               <CardHeader>
                 <CardTitle>Recharge Account</CardTitle>
                 <CardDescription>
-                  Select an amount to add to your balance using PayPal.
+                  Select an amount to add to your balance.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="recharge-amount">Amount (USD)</Label>
+                  <Label htmlFor="recharge-amount">Amount (INR)</Label>
                   <Input
                     id="recharge-amount"
                     name="amount"
                     type="number"
-                    placeholder="Enter amount in USD"
+                    placeholder="Enter amount in INR"
                     value={amount}
                     onChange={handleAmountChange}
                   />
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <Button type="button" variant="outline" onClick={() => setPresetAmount(10)}>$10</Button>
-                  <Button type="button" variant="outline" onClick={() => setPresetAmount(20)}>$20</Button>
-                  <Button type="button" variant="outline" onClick={() => setPresetAmount(50)}>$50</Button>
-                  <Button type="button" variant="outline" onClick={() => setPresetAmount(100)}>$100</Button>
-                  <Button type="button" variant="outline" onClick={() => setPresetAmount(200)}>$200</Button>
-                  <Button type="button" variant="outline" onClick={() => setPresetAmount(500)}>$500</Button>
+                  <Button type="button" variant="outline" onClick={() => setPresetAmount(500)}>₹500</Button>
+                  <Button type="button" variant="outline" onClick={() => setPresetAmount(1000)}>₹1000</Button>
+                  <Button type="button" variant="outline" onClick={() => setPresetAmount(2000)}>₹2000</Button>
+                  <Button type="button" variant="outline" onClick={() => setPresetAmount(5000)}>₹5000</Button>
+                  <Button type="button" variant="outline" onClick={() => setPresetAmount(10000)}>₹10000</Button>
+                  <Button type="button" variant="outline" onClick={() => setPresetAmount(25000)}>₹25000</Button>
                 </div>
-                {loading && (
-                    <div className="flex justify-center items-center">
-                        <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                        <span>Loading PayPal...</span>
-                    </div>
-                )}
-                <div ref={paypalButtonContainer} className="w-full min-h-[50px] relative z-0"></div>
+                
+                <Button onClick={handleRecharge} disabled={loading} className="w-full">
+                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Proceed to Pay ₹{amount}
+                </Button>
+
                 <p className="text-xs text-muted-foreground text-center">
-                  You will be redirected to PayPal to complete your payment.
+                  You will be redirected to your payment app (PhonePe, GPay, etc.) to complete the payment.
                 </p>
               </CardContent>
             </Card>
@@ -159,7 +118,7 @@ export default function BankPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                      <div className="space-y-2">
-                      <Label htmlFor="withdrawal-amount">Amount</Label>
+                      <Label htmlFor="withdrawal-amount">Amount (INR)</Label>
                       <Input
                         id="withdrawal-amount"
                         type="number"

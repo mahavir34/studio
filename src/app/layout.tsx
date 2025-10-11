@@ -1,5 +1,4 @@
 import type {Metadata, Viewport} from 'next';
-import Script from 'next/script';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from '@/firebase';
@@ -33,7 +32,6 @@ export default function RootLayout({
           {children}
         </FirebaseClientProvider>
         <Toaster />
-        <Script src={`https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=USD`} />
       </body>
     </html>
   );
